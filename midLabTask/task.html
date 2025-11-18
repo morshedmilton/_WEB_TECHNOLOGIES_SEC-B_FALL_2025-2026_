@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Form</title>
+</head>
+<body>
+
+<form method="POST" onsubmit="return false;">
+    <table>
+        <tr>
+            <td><label for="name">Enter the name of the field you want:</label></td>
+            <td><input type="text" id="name"></td>
+            <td><input type="button" id="submit" value="Submit"></td>
+        </tr>
+    </table>
+
+<script>
+// TRACK CREATED FIELDS
+let created = {};
+
+document.getElementById("submit").addEventListener("click", function () {
+    let f = document.getElementById("name").value.trim().toLowerCase();
+
+    if (f === "") { alert("Type a field name."); return; }
+
+    if (created[f]) { alert("This field already exists."); return; }
+
+    if (!(
+        f === "name" ||
+        f === "email" ||
+        f === "gender" ||
+        f === "date of birth" ||
+        f === "blood group" ||
+        f === "degree"
+    )) {
+        alert("Allowed: Name, Email, Gender, Date of birth, Blood Group, Degree");
+        return;
+    }
+
+    createField(f);
+    created[f] = true;
+});
+
+// CREATE FIELD
+function createField(f) {
+
+    if (!document.getElementById("fieldsContainer")) {
+        let div = document.createElement("div");
+        div.id = "fieldsContainer";
+        document.forms[0].appendChild(div);
+    }
+
+    // ensure results container exists (so saved info appears below fields)
+    if (!document.getElementById("resultsContainer")) {
+        let r = document.createElement("div");
+        r.id = "resultsContainer";
+        r.style.marginTop = "12px";
+        document.forms[0].appendChild(r);
+    }
+
+    let box = document.createElement("div");
+    box.style.marginTop = "10px";
+
+    if (f === "name") {
+        box.innerHTML = `
+            <label>Name</label><br>
+            <input type="text" id="fname"><br>
+            <p id="err_name"></p>
+        `;
+    }
+
+    if (f === "email") {
+        box.innerHTML = `
+            <label>Email</label><br>
+            <input type="text" id="femail"><br>
+            <p id="err_email"></p>
+        `;
+    }
+
+    if (f === "gender") {
+        box.innerHTML = `
+            <label>Gender</label><br>
+            <input type="radio" name="gender" value="Male"> Male
+            <input type="radio" name="gender" value="Female"> Female
+            <input type="radio" name="gender" value="Other"> Other<br>
+            <p id="err_gender"></p>
+        `;
+    }
+
+    if (f === "date of birth") {
+        box.innerHTML = `
+            <label>Date of Birth</label><br>
+            <input type="number" id="dd" placeholder="dd" style="width:50px;">
+            <input type="number" id="mm" placeholder="mm" style="width:50px;">
+            <input type="number" id="yy" placeholder="yyyy" style="width:70px;"><br>
+            <p id="err_dob"></p>
+        `;
+    }
+
+    if (f === "blood group") {
+        box.innerHTML = `
+            <label>Blood Group</label><br>
+            <select id="blood">
+                <option value="">Select</option>
+                <option>A+</option><option>A-</option>
+                <option>B+</option><option>B-</option>
+                <option>O+</option><option>O-</option>
+                <option>AB+</option><option>AB-</option>
+            </select><br>
+            <p id="err_blood"></p>
+        `;
+    }
+
+    if (f === "degree") {
+        box.innerHTML = `
+            <label>Degree</label><br>
+            <input type="checkbox" name="deg" value="SSC"> SSC
+            <input type="checkbox" name="deg" value="HSC"> HSC
+            <input type="checkbox" name="deg" value="BSc"> BSc
+            <input type="checkbox" name="deg" value="MSc"> MSc<br>
+            <p id="err_degree"></p>
+        `;
+    }
+
+    document.getElementById("fieldsContainer").appendChild(box);
+
+    // ADD SAVE BUTTON USING EVENT LISTENER
+    if (!document.getElementById("saveBtn")) {
+        let s = document.createElement("input");
+        s.type = "button";
+        s.id = "saveBtn";
+        s.value = "Save";
+        s.style.marginTop = "10px";
+
+        // ADD EVENT LISTENER
+        s.addEventListener("click", validateAll);
+
+        document.forms[0].appendChild(s);
+    }
+}
+
+// VALIDATE ALL FIELDS
+function validateAll() {
+
+    let anyError = false;
+
+    // NAME VALIDATION
+    if (created["name"]) {
+        let uname = document.getElementById("fname").value.trim();
+        let pid = document.getElementById("err_name");
+
+        if (uname === "") {
+            pid.textContent = "Cannot be empty";
+            pid.style.color = "red";
+            anyError = true;
+        } else {
+            let ok = true;
+            for (let i = 0; i < uname.length; i++) {
+                let ch = uname[i];
+                if (!((ch >= 'a' && ch <= 'z') ||
+                      (ch >= 'A' && ch <= 'Z') ||
+                      ch === '.' || ch === '-' || ch === ' ')) {
+                    ok = false; break;
+                }
+            }
+
+            if (!ok) {
+                pid.textContent = "Only letters, dots, spaces, and dashes are allowed.";
+                pid.style.color = "red";
+                anyError = true;
+            } else if (!((uname[0] >= 'a' && uname[0] <= 'z') ||
+                         (uname[0] >= 'A' && uname[0] <= 'Z'))) {
+                pid.textContent = "Must start with a letter";
+                pid.style.color = "red";
+                anyError = true;
+            } else if (uname.split(" ").length < 2) {
+                pid.textContent = "Must contain at least two words";
+                pid.style.color = "red";
+                anyError = true;
+            } else {
+                pid.textContent = "";
+            }
+        }
+    }
+
+    // EMAIL VALIDATION (no regex)
+    if (created["email"]) {
+        let email = document.getElementById("femail").value.trim();
+        let pid = document.getElementById("err_email");
+
+        if (email === "") {
+            pid.textContent = "Cannot be empty";
+            pid.style.color = "red";
+            anyError = true;
+        } else {
+            let at = email.indexOf("@");
+            let dot = email.lastIndexOf(".");
+
+            if (at < 1 || dot < at + 2 || dot === email.length - 1) {
+                pid.textContent = "Must be a valid email";
+                pid.style.color = "red";
+                anyError = true;
+            } else {
+                pid.textContent = "";
+            }
+        }
+    }
+
+    // GENDER VALIDATION
+    if (created["gender"]) {
+        let pid = document.getElementById("err_gender");
+        let r = document.getElementsByName("gender");
+        let sel = false;
+
+        for (let i = 0; i < r.length; i++) {
+            if (r[i].checked) sel = true;
+        }
+
+        if (!sel) {
+            pid.textContent = "Select gender";
+            pid.style.color = "red";
+            anyError = true;
+        } else pid.textContent = "";
+    }
+
+    // DOB VALIDATION
+    if (created["date of birth"]) {
+        let dd = document.getElementById("dd").value;
+        let mm = document.getElementById("mm").value;
+        let yy = document.getElementById("yy").value;
+        let pid = document.getElementById("err_dob");
+
+        if (dd === "" || mm === "" || yy === "") {
+            pid.textContent = "Cannot be empty";
+            pid.style.color = "red";
+            anyError = true;
+        } else {
+            let ndd = Number(dd), nmm = Number(mm), nyy = Number(yy);
+
+            if (ndd < 1 || ndd > 31 ||
+                nmm < 1 || nmm > 12 ||
+                nyy < 1900 || nyy > 2016) {
+
+                pid.textContent = "Invalid date";
+                pid.style.color = "red";
+                anyError = true;
+            } else pid.textContent = "";
+        }
+    }
+
+    // DEGREE VALIDATION
+    if (created["degree"]) {
+        let pid = document.getElementById("err_degree");
+        let c = document.getElementsByName("deg");
+        let sel = false;
+
+        for (let i = 0; i < c.length; i++) {
+            if (c[i].checked) sel = true;
+        }
+
+        if (!sel) {
+            pid.textContent = "Select at least one degree";
+            pid.style.color = "red";
+            anyError = true;
+        } else pid.textContent = "";
+    }
+
+    // BLOOD GROUP VALIDATION
+    if (created["blood group"]) {
+        let pid = document.getElementById("err_blood");
+        let val = document.getElementById("blood").value;
+
+        if (val === "") {
+            pid.textContent = "Select blood group";
+            pid.style.color = "red";
+            anyError = true;
+        } else pid.textContent = "";
+    }
+
+    if (anyError) return;
+
+    // --- all validation passed: collect values and display them below ---
+    let out = {};
+
+    if (created["name"]) {
+        out["Name"] = (document.getElementById("fname") || { value: '' }).value;
+    }
+    if (created["email"]) {
+        out["Email"] = (document.getElementById("femail") || { value: '' }).value;
+    }
+    if (created["gender"]) {
+        let r = document.getElementsByName("gender");
+        for (let i = 0; i < r.length; i++) if (r[i].checked) { out["Gender"] = r[i].value; break; }
+    }
+    if (created["date of birth"]) {
+        let dd = (document.getElementById("dd") || { value: '' }).value;
+        let mm = (document.getElementById("mm") || { value: '' }).value;
+        let yy = (document.getElementById("yy") || { value: '' }).value;
+        out["Date of birth"] = dd + '-' + mm + '-' + yy;
+    }
+    if (created["degree"]) {
+        let c = document.getElementsByName("deg");
+        let list = [];
+        for (let i = 0; i < c.length; i++) if (c[i].checked) list.push(c[i].value);
+        out["Degree"] = list.join(', ');
+    }
+    if (created["blood group"]) {
+        out["Blood Group"] = (document.getElementById("blood") || { value: '' }).value;
+    }
+
+    // show results in resultsContainer
+    let results = document.getElementById("resultsContainer");
+    results.innerHTML = ''; // clear old results
+
+    let title = document.createElement('h3');
+    title.textContent = 'Saved Information:';
+    results.appendChild(title);
+
+    let ul = document.createElement('ul');
+    for (let k in out) {
+        let li = document.createElement('li');
+        li.textContent = k + ': ' + out[k];
+        ul.appendChild(li);
+    }
+    if (Object.keys(out).length === 0) {
+        let p = document.createElement('p');
+        p.textContent = 'No fields to save.';
+        results.appendChild(p);
+    } else {
+        results.appendChild(ul);
+    }
+}
+</script>
+
+</form>
+</body>
+</html>
